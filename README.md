@@ -1,2 +1,2 @@
 # Preisachmodel
-Forward and numerically inverted Preisach model in Python based on the formulation by Isaak D. Mayergoyz
+Forward and numerically inverted Preisach model coded in Python based on the formulation by Isaak D. Mayergoyz
