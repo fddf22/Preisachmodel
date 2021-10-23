@@ -6,11 +6,13 @@ import collections
 from matplotlib import gridspec
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import LinearNDInterpolator, griddata
+from typing import Tuple, Callable, List
 import time
 import copy
 
 
-def analyticalPreisachFunction1(a, b, c, d, n, p, q, beta, alpha):
+def analyticalPreisachFunction1(a: float, b: float, c: float, d: float, n: float, p: float, q: float, beta: np.ndarray,
+                                alpha: np.ndarray) -> np.ndarray:
     """
     Function based on Paper IEEE TRANSACTIONS ON MAGNETICS, VOL. 39, NO. 3, MAY 2003 'Analytical  Approximation  of  Preisach
     Distribution Functions' by Janos Fuezi
@@ -28,7 +30,7 @@ def analyticalPreisachFunction1(a, b, c, d, n, p, q, beta, alpha):
     return preisach
 
 
-def analyticalPreisachFunction2(A, Hc, sigma, beta, alpha):
+def analyticalPreisachFunction2(A: float, Hc: float, sigma: float, beta: np.ndarray, alpha: np.ndarray) -> np.ndarray:
     """
     Function based on Paper 'Removing numerical instabilities in the Preisach model identification
     using genetic algorithms' by G. Consolo G. Finocchio, M. Carpentieri, B. Azzerboni.
@@ -44,7 +46,7 @@ def analyticalPreisachFunction2(A, Hc, sigma, beta, alpha):
     return preisach
 
 
-def initPreisachWithOnes():
+def initPreisachWithOnes(gridX: np.ndarray) -> np.ndarray:
     """
     Initialize the Preisach distribution function with ones over the entire Preisach-plane
     """
@@ -55,7 +57,7 @@ def initPreisachWithOnes():
     return preisach
 
 
-def removeInBetween(arr):
+def removeInBetween(arr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """
     Function for removing in between points of an array
     """
@@ -75,7 +77,7 @@ def removeInBetween(arr):
         return arr[whipeout_indexes], whipeout_indexes
 
 
-def removeRedundantPoints(pointsX, pointsY):
+def removeRedundantPoints(pointsX: np.ndarray, pointsY: np.ndarray) -> np.ndarray:
     """
     Function for removing redundant points inside vertices and horizontal lines of staircase polylines
     """
@@ -86,7 +88,7 @@ def removeRedundantPoints(pointsX, pointsY):
     return pointsX, pointsY
 
 
-def preisachIntegration(w, Z):
+def preisachIntegration(w: float, Z: np.ndarray) -> np.ndarray:
     """
     Perform 2D- integration of the Preisach distribution function.
     """
@@ -100,7 +102,7 @@ class PreisachModel:
     Efficient implementation of the scalar Preisach model
     """
 
-    def __init__(self, n, alpha0):
+    def __init__(self, n: int, alpha0: float):
         self.n = n
         self.alpha0 = alpha0
         self.beta0 = alpha0
@@ -114,14 +116,14 @@ class PreisachModel:
         self.pointsY = np.array([-self.alpha0], dtype=np.float64)
         self.interfaceX = np.array([-self.beta0, -self.beta0], dtype=np.float64)
         self.interfaceY = np.array([-self.alpha0, -self.alpha0], dtype=np.float64)
-        self.historyInterfaceX = []
-        self.historyInterfaceY = []
+        self.historyInterfaceX: List[float] = []
+        self.historyInterfaceY: List[float] = []
         self.historyU = - self.alpha0 * np.ones(1, dtype=np.float64)
         self.historyOut = np.zeros(0, dtype=np.float64)
         self.state = 'ascending'
         self.stateOld = 'ascending'
         self.stateChanged = False
-        self.everett = None
+        self.everett: Callable[[float, float], float]
 
     def __call__(self, *args, **kwargs):
         """
@@ -187,7 +189,7 @@ class PreisachModel:
         self.stateOld = 'ascending'
         self.stateChanged = False
 
-    def setDemagState(self, n=None):
+    def setDemagState(self, n: int = -1):
         """
         Function for setting the interface so that the output of the model will
         be zero initially (demagnetized state).
@@ -197,7 +199,7 @@ class PreisachModel:
         n : int
             Demagnetization step granularity
         """
-        if n is None:
+        if n == -1:
             n = 150
 
         self.setNegSatState()
@@ -258,7 +260,7 @@ class PreisachModel:
         print('Model inversion succesfull !!!')
         return invModel
 
-    def calculateOutput(self, **kwargs):
+    def calculateOutput(self, **kwargs) -> float:
         """
         Calculate the output of the model with the current interface.
         Negative beta0 required, because beta0 was defined to be positive,
@@ -273,7 +275,7 @@ class PreisachModel:
             mode = 'default'
 
         if mode == 'default':
-            sum = 0
+            sum = 0.0
             for i in range(1, len(self.interfaceX)):
                 Mk = self.interfaceY[i]
                 mk = self.interfaceX[i]
@@ -287,7 +289,7 @@ class PreisachModel:
 
         return output
 
-    def setEverettFunction(self, everett):
+    def setEverettFunction(self, everett: Callable[[float, float], float]):
         """
         Set everett function to given interpolator function.
 
@@ -301,7 +303,7 @@ class PreisachModel:
             raise ValueError('Given Parameter must be a callable function')
         self.everett = everett
 
-    def showEverettFunction(self, fig):
+    def showEverettFunction(self, fig: plt.Figure):
         """
         Show the Everett function in custom figure provided as argument
         """
@@ -314,14 +316,14 @@ class PreisachModel:
         ax.set_zlabel('z')
         plt.show()
 
-    def showInterface(self, fig):
+    def showInterface(self, fig: plt.Figure):
         """
         Show the current  interface in custom figure provided as argument
         """
         ax = fig.add_subplot(111)
         ax.plot(self.interfaceX, self.interfaceY, 'r', linewidth=3)
         ax.plot(np.array([-self.beta0, self.beta0, -self.beta0, -self.beta0]),
-                 np.array([-self.alpha0, self.alpha0, self.alpha0, -self.alpha0]), linewidth=3)
+                np.array([-self.alpha0, self.alpha0, self.alpha0, -self.alpha0]), linewidth=3)
         ax.xlim(-self.beta0 * 1.1, self.beta0 * 1.1)
         ax.ylim(-self.alpha0 * 1.1, self.alpha0 * 1.1)
         ax.title('{},{}'.format(self.interfaceX.tolist(), self.interfaceY.tolist()))
@@ -404,7 +406,6 @@ if __name__ == "__main__":
     # Q = 0.04
     # preisach = analyticalPreisachFunction1(A, B, C, D, N, P, Q, gridX, gridY)
 
-
     ######## analytic 2 #############
     A = 1
     Hc = 0.01
@@ -438,12 +439,13 @@ if __name__ == "__main__":
 
     # Create excitation signal
     nSamps = 2500
-    phi = np.linspace(0, 2 * np.pi + np.pi/2, nSamps)
+    phi = np.linspace(0, 2 * np.pi + np.pi / 2, nSamps)
 
     sawtooth = np.zeros(nSamps, dtype=np.float64)
-    sawtooth[phi < np.pi/2] = 0.7*2/np.pi * phi[phi < np.pi/2]
-    sawtooth[np.logical_and(phi < 3*np.pi/2, phi > np.pi/2)] = -0.7*2/np.pi*(phi[np.logical_and(phi < 3*np.pi/2, phi > np.pi/2)]-np.pi)
-    sawtooth[phi > 3*np.pi/2] = 0.7 * 2 / np.pi * (phi[phi > 3*np.pi/2] - 2*np.pi)
+    sawtooth[phi < np.pi / 2] = 0.7 * 2 / np.pi * phi[phi < np.pi / 2]
+    sawtooth[np.logical_and(phi < 3 * np.pi / 2, phi > np.pi / 2)] = -0.7 * 2 / np.pi * (
+            phi[np.logical_and(phi < 3 * np.pi / 2, phi > np.pi / 2)] - np.pi)
+    sawtooth[phi > 3 * np.pi / 2] = 0.7 * 2 / np.pi * (phi[phi > 3 * np.pi / 2] - 2 * np.pi)
 
     input = 0.15 * np.sin(30 * phi) + sawtooth
     output = np.zeros_like(input, dtype=np.float64)
@@ -468,5 +470,5 @@ if __name__ == "__main__":
     simulation1 = model.animateHysteresis()
     simulation2 = invModel.animateHysteresis()
     # Uncomment the next line if you want to save the animation
-    #simulation1.save(filename='hysterese_simulation.mp4', fps=30, dpi=300)
-    #simulation2.save(filename='hysterese_invertiert_simulation.mp4', fps=30, dpi=300)
+    # simulation1.save(filename='hysterese_simulation.mp4', fps=30, dpi=300)
+    # simulation2.save(filename='hysterese_invertiert_simulation.mp4', fps=30, dpi=300)
