@@ -102,7 +102,7 @@ class PreisachModel:
     Efficient implementation of the scalar Preisach model
     """
 
-    def __init__(self, n: int, alpha0: float):
+    def __init__(self, n: int, alpha0: float) -> None:
         self.n = n
         self.alpha0 = alpha0
         self.beta0 = alpha0
@@ -125,7 +125,7 @@ class PreisachModel:
         self.stateChanged = False
         self.everett: Callable[[float, float], float]
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> float:
         """
         Call model with input value given as argument
         """
@@ -167,7 +167,7 @@ class PreisachModel:
         self.historyOut = np.append(self.historyOut, copy.deepcopy(output))
         return output
 
-    def setNegSatState(self):
+    def setNegSatState(self) -> None:
         """
         Set the interface to negative saturation.
         """
@@ -177,7 +177,7 @@ class PreisachModel:
         self.interfaceY = np.array([-self.alpha0, -self.alpha0], dtype=np.float64)
         self.resetHistory()
 
-    def resetHistory(self):
+    def resetHistory(self) -> None:
         """
         Reset all model history parameters.
         """
@@ -189,7 +189,7 @@ class PreisachModel:
         self.stateOld = 'ascending'
         self.stateChanged = False
 
-    def setDemagState(self, n: int = -1):
+    def setDemagState(self, n: int = -1) -> None:
         """
         Function for setting the interface so that the output of the model will
         be zero initially (demagnetized state).
@@ -210,7 +210,7 @@ class PreisachModel:
 
         self.resetHistory()
 
-    def invert(self):
+    def invert(self) -> 'PreisachModel':
         """
         Return inverse Preisachmodel by constructing the inverse Everett
         function from the non inverted model using first order reversal curves (FODs).
@@ -289,7 +289,7 @@ class PreisachModel:
 
         return output
 
-    def setEverettFunction(self, everett: Callable[[float, float], float]):
+    def setEverettFunction(self, everett: Callable[[float, float], float]) -> None:
         """
         Set everett function to given interpolator function.
 
@@ -303,7 +303,7 @@ class PreisachModel:
             raise ValueError('Given Parameter must be a callable function')
         self.everett = everett
 
-    def showEverettFunction(self, fig: plt.Figure):
+    def showEverettFunction(self, fig: plt.Figure) -> None:
         """
         Show the Everett function in custom figure provided as argument
         """
@@ -316,7 +316,7 @@ class PreisachModel:
         ax.set_zlabel('z')
         plt.show()
 
-    def showInterface(self, fig: plt.Figure):
+    def showInterface(self, fig: plt.Figure) -> None:
         """
         Show the current  interface in custom figure provided as argument
         """
@@ -334,7 +334,7 @@ class PreisachModel:
         ax.legend(['Interface', 'Preisach Plane'])
         ax.show()
 
-    def animateHysteresis(self):
+    def animateHysteresis(self) -> animation.FuncAnimation:
         # @Todo vector length of u and out must be same
         self.historyU = self.historyU[1:]
 
